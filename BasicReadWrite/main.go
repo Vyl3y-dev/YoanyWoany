@@ -1,8 +1,8 @@
 package main
 
 import (
-	"YoanyWoany/input"
-	"YoanyWoany/models"
+	"BasicReadWrite/input"
+	"BasicReadWrite/models"
 
 	//"YoanyWoany/read"
 	//"YoanyWoany/write"
