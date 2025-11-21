@@ -1,15 +1,15 @@
 package main
 
 import (
-	"YoanyWoany/ui"
-
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 )
 
 func main() {
 
 	a := app.New()
-	mainWindow := ui.BuildStartMenu(a)
+	mainWindow := a.NewWindow("YOANYWOANY")
+	mainWindow.Resize(fyne.NewSize(450, 450))
 
 	mainWindow.ShowAndRun()
 
