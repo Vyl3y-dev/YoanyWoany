@@ -1,0 +1,380 @@
+FYNE ADVANCED CHEATSHEET
+=========================
+
+1. CUSTOM WIDGETS
+-----------------------------------
+Define your own widget type:
+
+type MyWidget struct {
+    widget.BaseWidget
+    text string
+}
+
+func NewMyWidget(t string) *MyWidget {
+    w := &MyWidget{text: t}
+    w.ExtendBaseWidget(w)
+    return w
+}
+
+func (w *MyWidget) CreateRenderer() fyne.WidgetRenderer {
+    lbl := canvas.NewText(w.text, color.White)
+
+    return &myWidgetRenderer{
+        widget: w,
+        objects: []fyne.CanvasObject{lbl},
+        label: lbl,
+    }
+}
+
+type myWidgetRenderer struct {
+    widget  *MyWidget
+    objects []fyne.CanvasObject
+    label   *canvas.Text
+}
+
+func (r *myWidgetRenderer) Layout(size fyne.Size) {}
+func (r *myWidgetRenderer) MinSize() fyne.Size   { return r.label.MinSize() }
+func (r *myWidgetRenderer) Refresh()             { canvas.Refresh(r.label) }
+func (r *myWidgetRenderer) Destroy()             {}
+func (r *myWidgetRenderer) Objects() []fyne.CanvasObject { return r.objects }
+
+
+2. CUSTOM THEMES
+-----------------------------------
+type MyTheme struct {}
+
+func (MyTheme) Color(n fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+    if n == theme.ColorNameButton {
+        return color.RGBA{200,50,50,255}
+    }
+    return theme.DefaultTheme().Color(n,v)
+}
+
+func (MyTheme) Icon(n fyne.ThemeIconName) fyne.Resource {
+    return theme.DefaultTheme().Icon(n)
+}
+
+func (MyTheme) Font(s fyne.TextStyle) fyne.Resource {
+    return theme.DefaultTheme().Font(s)
+}
+
+func (MyTheme) Size(n fyne.ThemeSizeName) float32 {
+    return theme.DefaultTheme().Size(n)
+}
+
+Apply theme:
+a.Settings().SetTheme(&MyTheme{})
+
+
+3. NAVIGATION STRUCTURES (ROUTER PATTERNS)
+-----------------------------------
+Use a single container:
+
+router := container.NewMax()
+router.Objects = []fyne.CanvasObject{ pages.Home() }
+
+Go to another page:
+router.Objects = []fyne.CanvasObject{ pages.Settings() }
+router.Refresh()
+
+Advanced router with mapping:
+pages := map[string]fyne.CanvasObject{
+    "home": HomePage(),
+    "settings": SettingsPage(),
+}
+
+Change page:
+router.Objects = []fyne.CanvasObject{pages["settings"]}
+
+
+4. STATE MANAGEMENT
+-----------------------------------
+Global shared state pattern:
+
+type AppState struct {
+    UserName string
+    Items    []Item
+    Mutex    sync.Mutex
+}
+
+var State = AppState{}
+
+Update safely:
+State.Mutex.Lock()
+State.UserName = "Vee"
+State.Mutex.Unlock()
+
+Pass state into views:
+pages.BuildDashboard(&State)
+
+
+5. DATA BINDING
+-----------------------------------
+entry := widget.NewEntry()
+str := binding.NewString()
+entry.Bind(str)
+
+Update programmatically:
+str.Set("Hello")
+current, _ := str.Get()
+
+
+6. AUTO-REFRESH LOOPS
+-----------------------------------
+Ticker refresh pattern:
+
+ticker := time.NewTicker(time.Second)
+go func(){
+    for range ticker.C {
+        fyne.Do(func(){
+            canvas.Refresh(myObj)
+        })
+    }
+}()
+
+Stop ticker:
+ticker.Stop()
+
+
+7. ASYNC TASKS (GO ROUTINES IN UI APPS)
+-----------------------------------
+Run heavy work:
+
+go func() {
+    result := computeSomething()
+    fyne.Do(func(){
+        label.SetText(result)
+    })
+}()
+
+Always use fyne.Do() when updating UI from goroutines.
+
+
+8. MODAL POPUPS (CUSTOM FORMS)
+-----------------------------------
+Create modal-like window without blocking:
+
+pop := a.NewWindow("Modal")
+pop.Resize(fyne.NewSize(300,200))
+
+Disable resizing:
+pop.SetFixedSize(true)
+
+pop.SetContent(container.NewVBox(
+    widget.NewLabel("Form"),
+    widget.NewButton("Close", pop.Close),
+))
+
+pop.Show()
+
+
+9. KEYBOARD SHORTCUTS
+-----------------------------------
+Add shortcut:
+
+ctrlS := &desktop.CustomShortcut{
+    KeyName:  fyne.KeyS,
+    Modifier: fyne.KeyModifierControl,
+}
+
+w.Canvas().AddShortcut(ctrlS, func(shortcut fyne.Shortcut){
+    save()
+})
+
+
+10. DRAG & DROP
+-----------------------------------
+Implement Drag-and-Drop:
+
+type DraggableLabel struct {
+    widget.Label
+}
+
+func (l *DraggableLabel) Dragged(e *fyne.DragEvent) {
+    l.Move(fyne.NewPos(
+        l.Position().X+e.Dragged.DX,
+        l.Position().Y+e.Dragged.DY,
+    ))
+}
+
+func (l *DraggableLabel) DragEnd() {}
+
+Use like:
+lbl := &DraggableLabel{}
+lbl.ExtendBaseWidget(lbl)
+
+
+11. CUSTOM DRAWING (CANVAS PAINTING)
+-----------------------------------
+Custom canvas object:
+
+type MyCanvas struct {
+    fyne.CanvasObject
+}
+
+func (m *MyCanvas) MinSize() fyne.Size {
+    return fyne.NewSize(200,200)
+}
+
+func (m *MyCanvas) Resize(s fyne.Size) {}
+func (m *MyCanvas) Position() fyne.Position { return fyne.NewPos(0,0) }
+func (m *MyCanvas) Move(p fyne.Position) {}
+func (m *MyCanvas) Show() {}
+func (m *MyCanvas) Hide() {}
+func (m *MyCanvas) Visible() bool { return true }
+
+func (m *MyCanvas) Refresh(){
+    canvas.Refresh(m)
+}
+
+Render inside Draw():
+canvas := canvas.NewRasterWithPixels(func(x,y,int,w,h int) color.Color {
+    return color.RGBA{uint8(x), uint8(y), 128, 255}
+})
+
+Use in container:
+container.NewMax(myCanvasObj)
+
+
+12. ADVANCED CONTAINERS
+-----------------------------------
+Scroll:
+scroll := container.NewScroll(content)
+
+Adaptive grid:
+container.NewAdaptiveGrid(columns, objs...)
+
+AppTabs:
+tabs := container.NewAppTabs(
+    container.NewTabItem("Home", home),
+    container.NewTabItem("Settings", settings),
+)
+
+Set tab location:
+tabs.SetTabLocation(container.TabLocationLeading)
+
+
+13. MEMORY / CLEANUP
+-----------------------------------
+Destroy widget renderer:
+func (r *myRenderer) Destroy() {
+    // free assets here
+}
+
+Remove objects manually:
+container.Objects = container.Objects[:0]
+canvas.Refresh(container)
+
+
+14. WINDOW MANAGEMENT
+-----------------------------------
+Center window:
+w.CenterOnScreen()
+
+Fixed size window:
+w.SetFixedSize(true)
+
+Close parent when child closes:
+child.SetOnClosed(func(){
+    parent.Show()
+})
+
+
+15. WORKING WITH FILES
+-----------------------------------
+Open file:
+dialog.ShowFileOpen(func(r fyne.URIReadCloser, err error){
+    if r != nil {
+        data, _ := io.ReadAll(r)
+        ...
+    }
+}, w)
+
+Save file:
+dialog.ShowFileSave(func(wr fyne.URIWriteCloser, err error){
+    if wr != nil {
+        wr.Write([]byte("data"))
+        wr.Close()
+    }
+}, w)
+
+
+16. RESOURCES & EMBEDDING
+-----------------------------------
+Embed file using go:embed
+
+//go:embed assets/icon.png
+var iconData []byte
+
+resource := fyne.NewStaticResource("icon", iconData)
+img := canvas.NewImageFromResource(resource)
+
+
+17. CLIPBOARD
+-----------------------------------
+Write:
+w.Clipboard().SetContent("Hello")
+
+Read:
+txt := w.Clipboard().Content()
+
+
+18. ADVANCED LAYOUT TRICKS
+-----------------------------------
+Space between items:
+container.NewVBox(
+    w1,
+    layout.NewSpacer(),
+    w2,
+)
+
+Center item:
+container.NewCenter(w)
+
+Overlay items:
+container.NewStack(bg, fg)
+
+
+19. PERFORMANCE TIPS
+-----------------------------------
+• Use raster/rasterWithPixels for heavy drawing
+• Avoid refreshing entire container; refresh only changed items
+• Reuse widgets when possible
+• Long loops must run in goroutines with fyne.Do()
+
+
+20. DEBUGGING / LOGGING
+-----------------------------------
+fmt.Println("debug")
+log.Println("debug message")
+
+Inspect object size:
+fmt.Println(obj.MinSize())
+
+
+21. FULL RECOMMENDED PROJECT STRUCTURE
+-----------------------------------
+project/
+    main.go
+    app/
+        router.go
+        state.go
+    pages/
+        Home.go
+        Dashboard.go
+        Settings.go
+    windows/
+        AddItem.go
+        EditItem.go
+        StartProcess.go
+    content/
+        Buttons.go
+        Inputs.go
+        Forms.go
+        Lists.go
+    assets/
+        icons/
+        images/
+
+
+END OF ADVANCED FYNE CHEAT SHEET

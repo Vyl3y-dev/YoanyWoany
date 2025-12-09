@@ -1,0 +1,250 @@
+FYNE CHEAT SHEET (GO GUI FRAMEWORK)
+===================================
+
+1. INSTALL FYNE
+-----------------------------------
+go get fyne.io/fyne/v2
+
+Optional fyne tool:
+go install fyne.io/fyne/v2/cmd/fyne@latest
+
+Add Go bin to PATH if needed:
+export PATH=$PATH:$(go env GOPATH)/bin
+
+
+2. BASIC APP STRUCTURE
+-----------------------------------
+import (
+    "fyne.io/fyne/v2"
+    "fyne.io/fyne/v2/app"
+    "fyne.io/fyne/v2/widget"
+)
+
+func main() {
+    a := app.New()
+    w := a.NewWindow("Title")
+
+    w.SetContent(widget.NewLabel("Hello"))
+    w.Resize(fyne.NewSize(400,300))
+    w.ShowAndRun()
+}
+
+
+3. COMMON IMPORTS
+-----------------------------------
+"fyne.io/fyne/v2"
+"fyne.io/fyne/v2/app"
+"fyne.io/fyne/v2/widget"
+"fyne.io/fyne/v2/container"
+"fyne.io/fyne/v2/canvas"
+"fyne.io/fyne/v2/dialog"
+"fyne.io/fyne/v2/layout"
+"fyne.io/fyne/v2/theme"
+"fyne.io/fyne/v2/driver/desktop"
+"image/color"
+
+
+4. WIDGETS
+-----------------------------------
+Label:
+    widget.NewLabel("Text")
+
+Button:
+    widget.NewButton("Click me", func(){ })
+
+Entry (single-line):
+    widget.NewEntry()
+
+Entry (multi-line):
+    widget.NewMultiLineEntry()
+
+Checkbox:
+    widget.NewCheck("Option", func(b bool){ })
+
+Select dropdown:
+    widget.NewSelect([]string{"A","B"}, func(v string){})
+
+List:
+    widget.NewList(func() int { return len(items) },
+        func() fyne.CanvasObject { return widget.NewLabel("") },
+        func(i widget.ListItemID, o fyne.CanvasObject) {
+            o.(*widget.Label).SetText(items[i])
+        },
+    )
+
+Form:
+    &widget.Form{
+        Items: []*widget.FormItem{
+            widget.NewFormItem("Name", entry),
+        },
+        OnSubmit: func(){},
+    }
+
+
+5. LAYOUTS
+-----------------------------------
+VBox (vertical):
+    container.NewVBox(w1, w2)
+
+HBox (horizontal):
+    container.NewHBox(w1, w2)
+
+Grid:
+    container.NewGridWithColumns(2, w1, w2)
+
+Border layout:
+    container.NewBorder(top, bottom, left, right, center)
+
+Without layout (manual positioning):
+    container.NewWithoutLayout(w1, w2)
+    w1.Move(fyne.NewPos(x,y))
+    w1.Resize(fyne.NewSize(w,h))
+
+
+6. CANVAS OBJECTS (shapes & images)
+-----------------------------------
+Rectangle:
+    canvas.NewRectangle(color.RGBA{R,G,B,A})
+
+Text:
+    t := canvas.NewText("Hello", color.White)
+    t.TextSize = 24
+
+Image:
+    img := canvas.NewImageFromFile("path.png")
+    img.FillMode = canvas.ImageFillOriginal
+
+Refresh UI object:
+    canvas.Refresh(obj)
+
+
+7. MENU BAR
+-----------------------------------
+menu := fyne.NewMainMenu(
+    fyne.NewMenu("File",
+        fyne.NewMenuItem("Save", func(){}),
+        fyne.NewMenuItem("Export", func(){}),
+    ),
+)
+w.SetMainMenu(menu)
+
+
+8. MULTIPLE WINDOWS
+-----------------------------------
+Create 2 windows:
+    w1 := a.NewWindow("Main")
+    w2 := a.NewWindow("Popup")
+
+Show popup:
+    w2.Show()
+
+Close popup:
+    w2.Close()
+
+
+9. PAGE SWITCHING (single-window apps)
+-----------------------------------
+pageContainer := container.NewMax(initialPage)
+
+Swap content:
+    pageContainer.Objects = []fyne.CanvasObject{ newPage }
+    pageContainer.Refresh()
+
+Common structure:
+    container.NewBorder(navBar, nil, nil, nil, pageContainer)
+
+
+10. EVENTS
+-----------------------------------
+Key events:
+    w.Canvas().SetOnTypedKey(func(e *fyne.KeyEvent) {
+        fmt.Println(e.Name)
+    })
+
+Mouse events (desktop only):
+    rect := canvas.NewRectangle(color.White)
+    rect.MouseDown = func(e *desktop.MouseEvent) {}
+
+
+11. TIMERS & ANIMATION
+-----------------------------------
+Ticker:
+    ticker := time.NewTicker(time.Millisecond * 16)
+    go func() {
+        for range ticker.C {
+            fyne.Do(func(){
+                // update UI here
+            })
+        }
+    }()
+
+fyne.Do required for UI updates from goroutines.
+
+
+12. DIALOGS
+-----------------------------------
+Info popup:
+    dialog.ShowInformation("Title", "Message", w)
+
+Confirm popup:
+    dialog.ShowConfirm("Title", "Message", func(ok bool){}, w)
+
+File dialog:
+    dialog.ShowFileOpen(func(r fyne.URIReadCloser, _ error){}, w)
+
+
+13. FILE STRUCTURE (recommended)
+-----------------------------------
+project/
+    main.go
+    pages/
+        Home.go
+        Settings.go
+        Items.go
+    windows/
+        AddItem.go
+        EditItem.go
+    content/
+        forms.go
+        buttons.go
+        inputs.go
+    assets/
+        icons/
+        images/
+
+
+14. BUILDING APPS
+-----------------------------------
+Build for current OS:
+    fyne package
+
+Run:
+    go run main.go
+
+
+15. STYLING & THEMES
+-----------------------------------
+Set default theme:
+    a.Settings().SetTheme(theme.DarkTheme())
+
+Custom themes extend fyne.Theme interface.
+
+
+16. SIZE & POSITION
+-----------------------------------
+Set window size:
+    w.Resize(fyne.NewSize(800,600))
+
+Center window (manual trick):
+    w.CenterOnScreen()
+
+Widget size:
+    widget.Resize(fyne.NewSize(w,h))
+
+
+17. RANDOM TIPS
+-----------------------------------
+• Only one window should use ShowAndRun().
+• Use fyne.Do() for UI updates in goroutines.
+• Prefer container.NewMax() for swapping pages.
+• Use separate windows for pop-out forms.
