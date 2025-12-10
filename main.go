@@ -11,7 +11,7 @@ func main() {
 
 	a := app.New()
 	mainWindow := a.NewWindow("YOANYWOANY")
-	mainWindow.Resize(fyne.NewSize(1280, 768))
+	mainWindow.Resize(fyne.NewSize(1440, 768))
 
 	mainWindow.SetContent(windows.DisplayContent(mainWindow))
 

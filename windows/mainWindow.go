@@ -1,6 +1,7 @@
 package windows
 
 import (
+	"image/color"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -16,6 +17,7 @@ func DisplayContent(w fyne.Window) *fyne.Container {
 		OpenPortal(w),
 		HiddenFacts(),
 		FloatingMug(),
+		CursedNotebook(),
 	)
 	return displayContent
 }
@@ -83,4 +85,25 @@ func FloatingMug() fyne.CanvasObject {
 	}()
 
 	return img
+}
+
+func CursedNotebook() *fyne.Container {
+	isCursed := true
+	t := canvas.NewText("", color.White)
+	t.TextSize = 24
+	t.Move(fyne.NewPos(1000, 100))
+	t.Resize(fyne.NewSize(150, 150))
+
+	if isCursed == true {
+		t.Text = "There exists a cursed notebook"
+		t.Refresh()
+	} else {
+
+		t.Text = "There does not exist a cursed notebook"
+		t.Refresh()
+	}
+
+	boxForText := container.NewWithoutLayout(t)
+
+	return boxForText
 }
