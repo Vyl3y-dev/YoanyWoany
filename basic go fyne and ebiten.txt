@@ -1,0 +1,580 @@
+============================================================
+======================  GO CHEAT SHEET  ====================
+============================================================
+
+BASIC GO CHEAT SHEET — Beginner → Intermediate Core
+
+1. Running a Project
+--------------------
+go mod init myproject
+go run .
+
+2. Basic Program
+----------------
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello Kotka ♥️")
+}
+
+3. Variables
+------------
+var name string = "Vyley"
+age := 25
+const PI = 3.14
+
+4. If / Else
+-------------
+if age > 18 {
+    fmt.Println("Adult")
+} else {
+    fmt.Println("Minor")
+}
+
+5. Loops
+--------
+for i := 0; i < 5; i++ { fmt.Println(i) }
+for x < 10 { x++ }
+for { doSomething() }
+
+6. Slices & Maps
+----------------
+nums := []int{1,2,3}
+nums = append(nums, 4)
+
+m := map[string]int{
+    "Vee": 10,
+    "Oni": 20,
+}
+m["Vee"] = 99
+
+7. Structs
+----------
+type Character struct {
+    Name  string
+    Age   int
+    Hair  string
+    Money float64
+}
+
+v := Character{Name:"Vee", Age:25}
+
+8. Constructor
+---------------
+func NewCharacter(name string, age int) Character {
+    return Character{Name:name, Age:age}
+}
+
+9. Methods
+-----------
+func (c *Character) Birthday() {
+    c.Age++
+}
+
+10. Pointers
+------------
+x := 10
+p := &x
+*p = 20
+
+11. Packages
+-------------
+package utils
+func Add(a,b int) int { return a+b }
+
+import "myproject/utils"
+utils.Add(2,3)
+
+12. Multiple Returns
+--------------------
+func divide(a,b float64) (float64,error) {
+    if b==0 { return 0, fmt.Errorf("err") }
+    return a/b, nil
+}
+
+13. Goroutines
+--------------
+go fmt.Println("runs async")
+
+14. Channels
+------------
+ch := make(chan int)
+
+go func(){ ch <- 10 }()
+val := <-ch
+
+15. Error Handling
+------------------
+data, err := os.ReadFile("a.txt")
+if err != nil { return err }
+
+16. JSON
+---------
+b,_ := json.Marshal(v)
+json.Unmarshal(b, &v)
+
+17. File Writing
+----------------
+os.WriteFile("save.json", b, 0644)
+
+18. Interfaces
+--------------
+type Speaker interface { Speak() string }
+type Cat struct{}
+func (Cat) Speak() string { return "meow" }
+
+19. Testing
+-----------
+func TestBirthday(t *testing.T){
+    c := Character{Age:20}
+    c.Birthday()
+    if c.Age != 21 { t.Fail() }
+}
+
+============================================================
+====================  FYNE CHEAT SHEET  ====================
+============================================================
+
+BASIC FYNE CHEAT SHEET — Widgets, Layouts, UI Patterns
+
+1. Basic Window
+---------------
+a := app.New()
+w := a.NewWindow("Hello")
+w.Resize(fyne.NewSize(600,400))
+w.ShowAndRun()
+
+2. Label
+--------
+label := widget.NewLabel("Hello Vee!")
+label.Wrapping = fyne.TextWrapWord
+
+3. Entry
+--------
+entry := widget.NewEntry()
+entry.SetPlaceHolder("Type here...")
+entry.OnChanged = func(s string){ fmt.Println(s) }
+
+4. Button
+---------
+btn := widget.NewButton("Click", func(){ fmt.Println("clicked") })
+
+5. Hyperlink
+------------
+link,_ := widget.NewHyperlink("Open", parseURL("https://fyne.io"))
+
+6. Layout Containers
+--------------------
+vbox := container.NewVBox(...)
+hbox := container.NewHBox(...)
+grid := container.NewGridWithColumns(2, ...)
+border := container.NewBorder(top,bottom,left,right,content)
+scroll := container.NewVScroll(bigContent)
+
+7. Canvas Objects
+-----------------
+txt := canvas.NewText("Hi", color.White)
+txt.TextSize = 20
+txt.Refresh()
+
+img := canvas.NewImageFromFile("assets/pic.png")
+img.FillMode = canvas.ImageFillContain
+
+rect := canvas.NewRectangle(color.RGBA{20,20,20,255})
+rect.SetMinSize(fyne.NewSize(200,80))
+
+8. Custom Card Example
+-----------------------
+func NewCard(title, subtitle string) fyne.CanvasObject {
+    t := canvas.NewText(title, color.White)
+    t.TextSize = 20
+    s := canvas.NewText(subtitle, color.Gray{Y:180})
+
+    box := container.NewVBox(t, s)
+    padded := container.NewPadded(box)
+
+    bg := canvas.NewRectangle(color.RGBA{45,45,55,255})
+    bg.SetMinSize(fyne.NewSize(250,120))
+
+    return container.NewMax(bg, padded)
+}
+
+9. Updating UI
+---------------
+label.SetText("new")
+txt.Text = "new"
+txt.Refresh()
+
+10. Animations (goroutine safe)
+-------------------------------
+ticker := time.NewTicker(time.Millisecond*16)
+go func(){
+    for range ticker.C {
+        fyne.Do(func(){
+            img.Move(fyne.NewPos(x,y))
+            img.Refresh()
+        })
+    }
+}()
+
+11. Tabs
+--------
+tabs := container.NewAppTabs(
+    container.NewTabItem("Home", widget.NewLabel("Welcome")),
+    container.NewTabItem("Search", widget.NewEntry()),
+)
+
+12. Switching Screens
+---------------------
+w.SetContent(HomeView(w))
+w.SetContent(SettingsView(w))
+
+13. Dialogs
+-----------
+dialog.ShowInformation("Saved","Done", w)
+
+14. Data Binding
+----------------
+name := binding.NewString()
+entry := widget.NewEntryWithData(name)
+label := widget.NewLabelWithData(name)
+
+============================================================
+===================  EBITEN CHEAT SHEET  ==================
+============================================================
+
+BASIC EBITEN CHEAT SHEET — Game Loop, Images, Movement, Animation
+
+1. Game Structure
+-----------------
+type Game struct{}
+
+func (g *Game) Update() error { return nil }
+func (g *Game) Draw(screen *ebiten.Image) {}
+func (g *Game) Layout(outW,outH int)(int,int){ return 320,240 }
+
+func main(){
+    ebiten.SetWindowSize(960,720)
+    ebiten.SetWindowTitle("Fruitmania")
+    ebiten.RunGame(&Game{})
+}
+
+2. Load Image
+--------------
+img,_,_ := ebitenutil.NewImageFromFile("assets/peach.png")
+
+3. Draw Image
+--------------
+op := &ebiten.DrawImageOptions{}
+op.GeoM.Translate(100,100)
+screen.DrawImage(img, op)
+
+4. Movement
+-----------
+var x,y = 100.0,100.0
+speed := 2.0
+
+if ebiten.IsKeyPressed(ebiten.KeyRight){ x+=speed }
+if ebiten.IsKeyPressed(ebiten.KeyLeft){ x-=speed }
+
+op.GeoM.Translate(x,y)
+
+5. Transformations
+------------------
+op.GeoM.Scale(2,2)
+op.GeoM.Rotate(math.Pi/4)
+op.GeoM.Scale(-1,1) // flip
+
+6. Text
+--------
+Use opentype + text.Draw.
+
+7. Game States
+---------------
+type GameState int
+const(
+    StateMenu GameState = iota
+    StateGameplay
+    StateGameOver
+)
+
+switch g.State {
+case StateMenu: g.updateMenu()
+case StateGameplay: g.updateGameplay()
+}
+
+8. Switching States
+-------------------
+if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+    g.State = StateGameplay
+}
+
+9. Sprite Animation
+-------------------
+type Anim struct{
+    Frames []*ebiten.Image
+    Index int
+    Tick int
+}
+
+func (a *Anim) Update(){
+    a.Tick++
+    if a.Tick%6==0 {
+        a.Index = (a.Index+1)%len(a.Frames)
+    }
+}
+
+func (a *Anim) Draw(screen *ebiten.Image, x,y float64){
+    op := &ebiten.DrawImageOptions{}
+    op.GeoM.Translate(x,y)
+    screen.DrawImage(a.Frames[a.Index], op)
+}
+
+10. Collision
+-------------
+func Collide(x1,y1,w1,h1,x2,y2,w2,h2 float64) bool {
+    return x1 < x2+w2 &&
+           x1+w1 > x2 &&
+           y1 < y2+h2 &&
+           y1+h1 > y2
+}
+
+11. Pixel Scaling
+-----------------
+func (g *Game) Layout(w,h int)(int,int){
+    return 320,180
+}
+
+12. Sound
+---------
+audio.NewPlayer(...)
+
+13. Falling Object
+------------------
+y += fallSpeed
+if y > 240 { y = -16 }
+
+14. Load Helper
+----------------
+func LoadImage(path string)*ebiten.Image{
+    img,_,err := ebitenutil.NewImageFromFile(path)
+    if err!=nil{ panic(err) }
+    return img
+}
+
+
+============================================================
+================  COMMONLY USED GO PACKAGES  ===============
+============================================================
+
+============================================================
+1. time — Working With Dates, Durations, Timers
+============================================================
+
+Current time:
+--------------
+now := time.Now()
+
+Format (Go uses reference date 2006-01-02):
+-------------------------------------------
+fmt.Println(now.Format("2006-01-02 15:04"))
+
+Sleeping:
+---------
+time.Sleep(2 * time.Second)
+
+Timer:
+------
+timer := time.NewTimer(3 * time.Second)
+<-timer.C   // waits 3 seconds
+
+Ticker (repeats):
+-----------------
+ticker := time.NewTicker(1 * time.Second)
+for range ticker.C {
+    fmt.Println("tick")
+}
+
+Add/Subtract time:
+------------------
+future := now.Add(48 * time.Hour)
+past := now.Add(-1 * time.Hour)
+
+Compare:
+--------
+if a.Before(b) {}
+if a.After(b)  {}
+if a.Equal(b)  {}
+
+Duration:
+---------
+d := time.Since(startTime)
+
+
+============================================================
+2. image/color — Colors for graphics, Ebiten, Fyne, etc.
+============================================================
+
+RGBA color:
+-----------
+c := color.RGBA{R:255, G:100, B:50, A:255}
+
+Predefined:
+-----------
+color.White
+color.Black
+color.Transparent
+color.RGBA{128,128,128,255} // custom gray
+
+
+============================================================
+3. encoding/json — Reading/Writing JSON
+============================================================
+
+Struct to JSON:
+---------------
+b, err := json.Marshal(myStruct)
+os.WriteFile("data.json", b, 0644)
+
+Pretty JSON:
+------------
+b, _ := json.MarshalIndent(myStruct, "", "  ")
+
+JSON to Struct:
+---------------
+data, _ := os.ReadFile("data.json")
+var obj MyStruct
+json.Unmarshal(data, &obj)
+
+Custom field names:
+-------------------
+type Player struct {
+    Name string `json:"name"`
+    Score int   `json:"score"`
+}
+
+
+============================================================
+4. encoding/csv — Loading & Saving CSV Files
+============================================================
+
+Reading CSV:
+--------------
+f, _ := os.Open("data.csv")
+r := csv.NewReader(f)
+records, _ := r.ReadAll()
+
+for _, row := range records {
+    fmt.Println(row[0], row[1])
+}
+
+Writing CSV:
+-------------
+f, _ := os.Create("out.csv")
+w := csv.NewWriter(f)
+
+w.Write([]string{"name","score"})
+w.Write([]string{"Vee","9000"})
+w.Flush()
+
+
+============================================================
+5. os — File + Directory Operations
+============================================================
+
+Read file:
+-----------
+data, err := os.ReadFile("file.txt")
+
+Write file:
+------------
+os.WriteFile("file.txt", []byte("hello"), 0644)
+
+Check if file exists:
+---------------------
+if _, err := os.Stat("file.txt"); err == nil {
+    fmt.Println("exists")
+}
+
+Create folder:
+---------------
+os.Mkdir("saves", 0755)
+
+List files:
+------------
+entries, _ := os.ReadDir(".")
+for _, e := range entries {
+    fmt.Println(e.Name())
+}
+
+
+============================================================
+6. math/rand — Random Numbers
+============================================================
+
+Random int:
+-----------
+rv := rand.Intn(10)  // 0–9
+
+Random float:
+-------------
+r := rand.Float64() // 0.0–1.0
+
+Seeding (important for games!):
+-------------------------------
+rand.Seed(time.Now().UnixNano())
+
+Random range helper:
+--------------------
+func RandRange(min, max int) int {
+    return rand.Intn(max-min+1) + min
+}
+
+
+============================================================
+7. strings — Helpful Utilities
+============================================================
+
+Lowercase / Uppercase:
+-----------------------
+strings.ToLower("VEE")
+strings.ToUpper("oni")
+
+Contains:
+---------
+strings.Contains("hello world", "world")
+
+Split:
+------
+parts := strings.Split("a,b,c", ",")
+
+Join:
+-----
+out := strings.Join([]string{"a","b","c"}, "-")
+
+Trim:
+-----
+strings.TrimSpace("   hi   ")
+
+
+============================================================
+8. fmt — Printing & Formatting
+============================================================
+
+Basic:
+------
+fmt.Println("hello")
+
+Formatted:
+-----------
+fmt.Printf("Score: %d\n", score)
+
+String formatting:
+------------------
+s := fmt.Sprintf("x=%d y=%d", x, y)
+
+============================================================
+=====================  END OF CHEAT SHEETS  =================
+============================================================
